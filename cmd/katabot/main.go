@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"github.com/kata-kas/katabot/bin/env"
+	"github.com/kata-kas/katabot/internal/discord"
 )
 
-func Main() {
-	fmt.Println("Hello, from Main")
+func main() {
+	env.Load(".env")
+	discord.InitializeBot()
 }
