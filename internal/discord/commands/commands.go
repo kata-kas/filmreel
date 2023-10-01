@@ -17,6 +17,10 @@ var commandDescriptions = []*discordgo.ApplicationCommand{
 		Name:        "chucky",
 		Description: "Chuck Norris jokes",
 	},
+	{
+		Name:        "add-user",
+		Description: "Add user",
+	},
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -30,6 +34,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 	},
 	"quote-me-daddy": QuoteCommand,
 	"chucky":         ChuckyCommand,
+	"add-user": 
 }
 
 func RegisterCommands(bot *discordgo.Session) {
