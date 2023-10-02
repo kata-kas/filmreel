@@ -21,8 +21,6 @@ func InitializeBot() {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
-	commands.RegisterCommands(bot)
-
 	bot.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
 	err = bot.Open()
@@ -30,7 +28,7 @@ func InitializeBot() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Adding commands...")
+	commands.RegisterCommands(bot)
 
 	defer bot.Close()
 

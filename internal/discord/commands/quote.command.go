@@ -13,7 +13,7 @@ import (
 
 type Response struct {
 	Quote  string `json:"quote"`
-	Author string `json:"author`
+	Author string `json:"author"`
 }
 
 func QuoteCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -48,6 +48,9 @@ func fetchQuote() discordgo.MessageEmbed {
 	var responseObject []Response
 	json.Unmarshal(responseData, &responseObject)
 
+	if len(responseObject) == 0 {
+		log.Fatal("wrong api response", responseObject)
+	}
 	quote := responseObject[0]
 
 	author := discordgo.MessageEmbedAuthor{

@@ -1,10 +1,12 @@
 package commands
 
 import (
+	"log"
+
 	"github.com/bwmarrin/discordgo"
 )
 
-var commandDescriptions = []*discordgo.ApplicationCommand{
+var commandStructure = []*discordgo.ApplicationCommand{
 	{
 		Name:        "basic-command",
 		Description: "Basic command",
@@ -15,11 +17,23 @@ var commandDescriptions = []*discordgo.ApplicationCommand{
 	},
 	{
 		Name:        "chucky",
-		Description: "Chuck Norris jokes",
+		Description: "Chuck jokes",
 	},
 	{
 		Name:        "add-user",
 		Description: "Add user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "letterboxd-link",
+				Description: "Letterboxd link",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "top",
+		Description: "Show top of most movies watched",
 	},
 }
 
@@ -34,7 +48,8 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 	},
 	"quote-me-daddy": QuoteCommand,
 	"chucky":         ChuckyCommand,
-	"add-user": 
+	"add-user":       AddUserCommand,
+	"top":            TopCommand,
 }
 
 func RegisterCommands(bot *discordgo.Session) {
@@ -43,4 +58,10 @@ func RegisterCommands(bot *discordgo.Session) {
 			h(s, i)
 		}
 	})
+	for _, v := range commandStructure {
+		_, err := bot.ApplicationCommandCreate(bot.State.User.ID, "", v)
+		if err != nil {
+			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+		}
+	}
 }
