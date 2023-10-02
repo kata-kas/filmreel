@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -27,11 +28,11 @@ func ChuckyCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func fetchChuckNorris() discordgo.MessageEmbed {
 	client := http.Client{}
-	req, err := http.NewRequest("GET", "https://api.api-ninjas.com/v1/chucknorris?", nil)
+	req, err := http.NewRequest("GET", os.Getenv("CHUCKY_URL"), nil)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	req.Header.Add("X-Api-Key", "eUce+mtbT7vu0TcyQ+XOMA==qsrHoopebYE1cPxQ")
+	req.Header.Add("X-Api-Key", os.Getenv("NINJAAPI_TOKEN"))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -50,7 +51,7 @@ func fetchChuckNorris() discordgo.MessageEmbed {
 		Name: "Chuck Norris",
 	}
 	image := &discordgo.MessageEmbedImage{
-		URL: "https://images.fineartamerica.com/images/artworkimages/mediumlarge/2/chuck-norris-stars-on-art.jpg",
+		URL: os.Getenv("CHUCKY_IMAGE"),
 	}
 	embed := discordgo.MessageEmbed{
 		Title:  responseObject.Joke,

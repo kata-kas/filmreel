@@ -6,13 +6,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 type Response struct {
 	Quote  string `json:"quote"`
-	Author string `json:"author`
+	Author string `json:"author"`
 }
 
 func QuoteCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -28,11 +29,11 @@ func QuoteCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func fetchQuote() discordgo.MessageEmbed {
 	client := http.Client{}
-	req, err := http.NewRequest("GET", "https://api.api-ninjas.com/v1/quotes?category=movies", nil)
+	req, err := http.NewRequest("GET", os.Getenv("QUOTES_URL"), nil)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	req.Header.Add("X-Api-Key", "eUce+mtbT7vu0TcyQ+XOMA==qsrHoopebYE1cPxQ")
+	req.Header.Add("X-Api-Key", os.Getenv("NINJAAPI_TOKEN"))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -47,11 +48,13 @@ func fetchQuote() discordgo.MessageEmbed {
 	var responseObject []Response
 	json.Unmarshal(responseData, &responseObject)
 
+	if len(responseObject) == 0 {
+		log.Fatal("wrong api response", responseObject)
+	}
 	quote := responseObject[0]
 
 	author := discordgo.MessageEmbedAuthor{
 		Name: quote.Author,
-		URL:  "https://rroll.to/iHgSMg",
 	}
 	embed := discordgo.MessageEmbed{
 		Title:  quote.Quote,
