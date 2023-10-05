@@ -3,7 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -40,7 +40,7 @@ func fetchQuote() discordgo.MessageEmbed {
 		fmt.Println(err)
 	}
 
-	responseData, err := ioutil.ReadAll(resp.Body)
+	responseData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}

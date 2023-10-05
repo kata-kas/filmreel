@@ -16,9 +16,9 @@ type User struct {
 	ImageUrl    string
 }
 
-func ScrapeUser(link string) (User, error) {
+func ScrapeUser(username string) (User, error) {
 	result := User{
-		LbUsername: link[strings.LastIndex(link, "/")+1:],
+		LbUsername: username,
 	}
 	var resultError error
 	c := colly.NewCollector()
@@ -44,10 +44,42 @@ func ScrapeUser(link string) (User, error) {
 		fmt.Println("Visiting", r.URL)
 	})
 
-	err := c.Visit(link)
+	err := c.Visit("https://letterboxd.com/" + username)
 	if err != nil {
 		resultError = err
 	}
 
 	return result, resultError
+}
+
+type Movie struct {
+	lbSlug string
+	name   string
+	poster string
+}
+
+type Rating struct {
+	reviewerLbUsername string
+	movieLbSlug        string
+	value              int8
+}
+
+func ScrapeFilms(username string) ([]*Rating, error) {
+	results := []*Rating{}
+	var resultError error
+	c := colly.NewCollector()
+
+	c.OnHTML("body.error", func(h *colly.HTMLElement) {
+		resultError = errors.New("No such user")
+	})
+
+	c.OnHTML("ul.poster-list", func(h *colly.HTMLElement) {
+		h.ForEach("li.poster-container", func(i int, h *colly.HTMLElement) {
+
+		})
+	})
+
+	c.Visit("https://letterboxd.com/" + username + "/films/")
+
+	return results, resultError
 }
