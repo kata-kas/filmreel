@@ -21,8 +21,6 @@ func InitializeBot() {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
-	bot.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
-
 	err = bot.Open()
 	if err != nil {
 		log.Fatal(err)

@@ -34,7 +34,7 @@ func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	user, error := letterboxd.ScrapeUser(link)
+	user, error := letterboxd.ScrapeUser(username)
 
 	if error != nil {
 		fmt.Printf("scraping user error: %s", error)

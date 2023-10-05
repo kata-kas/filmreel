@@ -35,6 +35,30 @@ var commandStructure = []*discordgo.ApplicationCommand{
 		Name:        "top",
 		Description: "Show top of most movies watched",
 	},
+	{
+		Name:        "movie",
+		Description: "Find a movie",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "movie-title",
+				Description: "Movie Title",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "announce",
+		Description: "Announce a stream using a Letterboxd link",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "letterboxd-link",
+				Description: "Letterboxd Link",
+				Required:    true,
+			},
+		},
+	},
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -50,6 +74,8 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 	"chucky":         ChuckyCommand,
 	"add-user":       AddUserCommand,
 	"top":            TopCommand,
+	"movie":          MovieCommand,
+	"announce":       AnnounceCommand,
 }
 
 func RegisterCommands(bot *discordgo.Session) {
