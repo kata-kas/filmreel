@@ -2,8 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/kata-kas/katabot/internal/db"
@@ -17,15 +17,20 @@ func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		optionMap[opt.Name] = opt
 	}
 
-	link := optionMap["letterboxd-link"].StringValue()
-	// remove the last / in the link if it's present
-	if strings.HasSuffix(link, "/") {
-		link = link[:len(link)-1]
+	userLink := optionMap["letterboxd-link"].StringValue()
+	parsedURL, err := url.Parse(userLink)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "The link doesn't look ok.",
+			},
+		})
 	}
-	username := link[strings.LastIndex(link, "/")+1:]
+	username := parsedURL.Path
 
-	_, err := db.GetUserByUsername(username)
-	if err == nil {
+	_, err = db.GetUserByUsername(username)
+	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{

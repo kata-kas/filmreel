@@ -21,6 +21,12 @@ func InitializeBot() {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
+	bot.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+		if m.Author != nil && m.Author.ID != s.State.User.ID {
+			s.MessageReactionAdd(m.ChannelID, m.ID, "👍")
+		}
+	})
+
 	err = bot.Open()
 	if err != nil {
 		log.Fatal(err)
