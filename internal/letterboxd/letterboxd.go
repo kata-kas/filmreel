@@ -9,13 +9,6 @@ import (
 	"github.com/gocolly/colly"
 )
 
-type User struct {
-	LbUsername  string
-	Name        string
-	TotalMovies int16
-	ImageUrl    string
-}
-
 func ScrapeUser(username string) (User, error) {
 	result := User{
 		LbUsername: username,
@@ -44,24 +37,12 @@ func ScrapeUser(username string) (User, error) {
 		fmt.Println("Visiting", r.URL)
 	})
 
-	err := c.Visit("https://letterboxd.com/" + username)
+	err := c.Visit(LB_BASE_URL + username)
 	if err != nil {
 		resultError = err
 	}
 
 	return result, resultError
-}
-
-type Movie struct {
-	lbSlug string
-	name   string
-	poster string
-}
-
-type Rating struct {
-	reviewerLbUsername string
-	movieLbSlug        string
-	value              int8
 }
 
 func ScrapeFilms(username string) ([]*Rating, error) {
@@ -79,7 +60,7 @@ func ScrapeFilms(username string) ([]*Rating, error) {
 		})
 	})
 
-	c.Visit("https://letterboxd.com/" + username + "/films/")
+	c.Visit(LB_BASE_URL + username + "/films/")
 
 	return results, resultError
 }

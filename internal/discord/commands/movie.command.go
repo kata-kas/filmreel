@@ -6,6 +6,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/kata-kas/katabot/internal/db"
+	"github.com/kata-kas/katabot/internal/letterboxd"
 )
 
 func MovieCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -42,7 +43,7 @@ func MovieCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	image := &discordgo.MessageEmbedThumbnail{
-		URL: "https://a.ltrbxd.com/resized/" + movie.ImageURL + ".jpg",
+		URL: letterboxd.LB_IMG_URL + movie.ImageURL + ".jpg",
 	}
 	embed := discordgo.MessageEmbed{
 		Thumbnail:   image,
@@ -50,7 +51,7 @@ func MovieCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Description: movie.Overview,
 		Color:       0xFFD700,
 		Fields:      fields,
-		URL:         "https://letterboxd.com/film/" + movie.MovieID,
+		URL:         letterboxd.LB_FILM_URL + movie.MovieID,
 	}
 
 	embeds := []*discordgo.MessageEmbed{&embed}

@@ -12,6 +12,10 @@ var commandStructure = []*discordgo.ApplicationCommand{
 		Description: "Basic command",
 	},
 	{
+		Name:        "ping",
+		Description: "ping",
+	},
+	{
 		Name:        "quote-me-daddy",
 		Description: "Quote me, Daddy, uwu",
 	},
@@ -67,6 +71,14 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Hey there! Congratulations, you just executed our first slash command",
+			},
+		})
+	},
+	"ping": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "pong",
 			},
 		})
 	},

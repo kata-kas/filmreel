@@ -11,7 +11,7 @@ import (
 func TopCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	users, err := db.GetTopByTotalMovies()
 	if err != nil {
-		fmt.Println("error on TopCommand: %v\n", err)
+		fmt.Printf("error on TopCommand: %v\n", err)
 	}
 
 	fields := []*discordgo.MessageEmbedField{

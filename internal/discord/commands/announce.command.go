@@ -8,6 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/kata-kas/katabot/internal/db"
+	"github.com/kata-kas/katabot/internal/letterboxd"
 )
 
 func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -18,28 +19,25 @@ func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	movieLink := optionMap["letterboxd-link"].StringValue()
+
+	interactionResponseData := announceLb(movieLink)
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &interactionResponseData,
+	})
+}
+
+func announceLb(movieLink string) discordgo.InteractionResponseData {
 	parsedURL, err := url.Parse(movieLink)
 	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: err.Error(),
-			},
-		})
-		return
+		return discordgo.InteractionResponseData{Content: err.Error()}
 	}
 	movieId := path.Base(parsedURL.Path)
 
 	movie, err := db.SearchMovieByMovieId(movieId)
 	if err != nil {
 		fmt.Println(err)
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: err.Error(),
-			},
-		})
-		return
+		return discordgo.InteractionResponseData{Content: err.Error()}
 	}
 
 	genreSlice := strings.Split(movie.Genres, ";")
@@ -62,7 +60,7 @@ func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	fields := []*discordgo.MessageEmbedField{
 		{
 			Name:   "Average Rating",
-			Value:  ConvertVoteAverageToMoons(movie.VoteAverage),
+			Value:  convertVoteAverageToMoons(movie.VoteAverage),
 			Inline: true,
 		},
 		{
@@ -72,7 +70,7 @@ func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	}
 	image := &discordgo.MessageEmbedThumbnail{
-		URL: "https://a.ltrbxd.com/resized/" + movie.ImageURL + ".jpg",
+		URL: letterboxd.LB_IMG_URL + movie.ImageURL + ".jpg",
 	}
 	embed := discordgo.MessageEmbed{
 		Thumbnail:   image,
@@ -84,24 +82,16 @@ func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	embeds := []*discordgo.MessageEmbed{&embed}
-	interactionErr := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds:  embeds,
-			Content: fmt.Sprintf("%s\n", strings.Join(genreRoles, "")),
-			AllowedMentions: &discordgo.MessageAllowedMentions{
-				Roles: genreRolesIds,
-			},
+	return discordgo.InteractionResponseData{
+		Embeds:  embeds,
+		Content: fmt.Sprintf("%s\n", strings.Join(genreRoles, "")),
+		AllowedMentions: &discordgo.MessageAllowedMentions{
+			Roles: genreRolesIds,
 		},
-	})
-
-	if interactionErr != nil {
-		fmt.Println(interactionErr)
 	}
-	return
 }
 
-func ConvertVoteAverageToMoons(voteAverage float64) string {
+func convertVoteAverageToMoons(voteAverage float64) string {
 	result := ""
 	moonCount := 0
 	voteAverage /= 2
