@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/katabot/internal/db"
+	"github.com/kata-kas/filmreel/db"
 )
 
 func TopCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {

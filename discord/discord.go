@@ -7,7 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/katabot/internal/discord/commands"
+	"github.com/kata-kas/filmreel/discord/commands"
 )
 
 func InitializeBot() {
@@ -20,12 +20,7 @@ func InitializeBot() {
 	bot.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
-
-	bot.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if m.Author != nil && m.Author.ID != s.State.User.ID {
-			s.MessageReactionAdd(m.ChannelID, m.ID, "👍")
-		}
-	})
+	bot.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMembers)
 
 	err = bot.Open()
 	if err != nil {

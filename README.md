@@ -1,4 +1,5 @@
-# Movie Discord Bot
+# FilmReel
+## Movie Discord Bot
 
 Features in progress:
 1. ~~Importing user data from Letterboxd~~
