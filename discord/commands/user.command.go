@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/katabot/internal/db"
-	"github.com/kata-kas/katabot/internal/letterboxd"
+	"github.com/kata-kas/filmreel/db"
+	"github.com/kata-kas/filmreel/letterboxd"
 )
 
 func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/bwmarrin/discordgo"
@@ -8,20 +9,8 @@ import (
 
 var commandStructure = []*discordgo.ApplicationCommand{
 	{
-		Name:        "basic-command",
-		Description: "Basic command",
-	},
-	{
 		Name:        "ping",
 		Description: "ping",
-	},
-	{
-		Name:        "quote-me-daddy",
-		Description: "Quote me, Daddy, uwu",
-	},
-	{
-		Name:        "chucky",
-		Description: "Chuck jokes",
 	},
 	{
 		Name:        "add-user",
@@ -82,15 +71,51 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 			},
 		})
 	},
-	"quote-me-daddy": QuoteCommand,
-	"chucky":         ChuckyCommand,
-	"add-user":       AddUserCommand,
-	"top":            TopCommand,
-	"movie":          MovieCommand,
-	"announce":       AnnounceCommand,
+	"add-user": AddUserCommand,
+	"top":      TopCommand,
+	"movie":    MovieCommand,
+	"announce": AnnounceCommand,
+}
+
+func guildMemberUpdate(s *discordgo.Session, m *discordgo.GuildMemberUpdate) {
+	roleName := "-18"
+	fmt.Printf("member %s joined\n", m.User.Username)
+	roles, err := s.GuildRoles(m.GuildID)
+	if err != nil {
+		log.Printf("error fetching roles: %v", err)
+		return
+	}
+
+	var roleID string
+	for _, role := range roles {
+		if role.Name == roleName {
+			roleID = role.ID
+			break
+		}
+	}
+
+	if roleID == "" {
+		log.Printf("role %s not found", roleName)
+		return
+	}
+
+	fmt.Printf("user roles %v\n", m.Roles)
+	for _, memberRoleID := range m.Roles {
+		if memberRoleID == roleID {
+			// Kick the member
+			err := s.GuildMemberDeleteWithReason(m.GuildID, m.User.ID, "USER WAS A MINOR")
+			if err != nil {
+				log.Printf("error kicking user %s: %v", m.User.Username, err)
+			} else {
+				log.Printf("kicked user %s with role %s", m.User.Username, roleName)
+			}
+			return
+		}
+	}
 }
 
 func RegisterCommands(bot *discordgo.Session) {
+	bot.AddHandler(guildMemberUpdate)
 	bot.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
