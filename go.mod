@@ -6,12 +6,13 @@ toolchain go1.22.1
 
 require (
 	github.com/bwmarrin/discordgo v0.27.1
+	github.com/go-rod/rod v0.116.2
 	github.com/gocolly/colly v1.2.0
 	github.com/joho/godotenv v1.5.1
 )
 
 require (
-	github.com/go-rod/rod v0.116.2 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
@@ -35,7 +36,6 @@ require (
 	github.com/antchfx/htmlquery v1.2.3 // indirect
 	github.com/antchfx/xmlquery v1.2.4 // indirect
 	github.com/antchfx/xpath v1.1.8 // indirect
-	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230512164433-5d1fd1a340c9 // indirect
 	github.com/go-co-op/gocron v1.35.3
 	github.com/go-rod/stealth v0.4.9
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -43,14 +43,9 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
-	github.com/klauspost/compress v1.15.15 // indirect
-	github.com/libsql/sqlite-antlr4-parser v0.0.0-20230802215326-5cb5bb604475 // indirect
-	github.com/renxzen/gorm-libsql v0.0.0-20240302231413-bea2dce63ac6
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/temoto/robotstxt v1.1.1 // indirect
-	github.com/tursodatabase/libsql-client-go v0.0.0-20240319161759-27d97b27f9e1
 	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
@@ -58,5 +53,4 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
-	nhooyr.io/websocket v1.8.7 // indirect
 )

@@ -1,7 +1,5 @@
 package letterboxd
 
-import "github.com/kata-kas/filmreel/db"
-
 const LB_BASE_URL = "https://letterboxd.com/"
 const LB_IMG_URL = "https://a.ltrbxd.com/resized/"
 const LB_FILM_URL = LB_BASE_URL + "film/"
@@ -23,13 +21,4 @@ type Rating struct {
 	reviewerLbUsername string
 	movieLbSlug        string
 	value              int8
-}
-
-func LetterboxdUserToDBUser(src User) db.User {
-	return db.User{
-		LbUsername:  src.LbUsername,
-		Name:        src.Name,
-		TotalMovies: int(src.TotalMovies),
-		ImageUrl:    src.ImageUrl,
-	}
 }

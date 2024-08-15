@@ -6,11 +6,9 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/filmreel/db"
-	"github.com/kata-kas/filmreel/letterboxd"
 )
 
-func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (c *commands) AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
 	for _, opt := range options {
@@ -29,7 +27,7 @@ func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	username := parsedURL.Path
 
-	_, err = db.GetUserByUsername(username)
+	_, err = c.DB.GetUserByUsername(username)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -39,8 +37,7 @@ func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	lb := letterboxd.NewLB()
-	user, error := lb.ScrapeUser(username)
+	user, error := c.LB.ScrapeUser(username)
 
 	if error != nil {
 		fmt.Printf("scraping user error: %s", error)
@@ -52,18 +49,18 @@ func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	dbUser := letterboxd.LetterboxdUserToDBUser(user)
-	addUserErr := db.AddUser(&dbUser)
+	dbUser := c.LB.LetterboxdUserToDBUser(user)
+	addUserErr := c.DB.AddUser(dbUser)
 	if addUserErr != nil {
 		fmt.Println(err)
 	}
 
-	interaction := ShowUser(s, i, username)
+	interaction := c.ShowUser(s, i, username)
 	s.InteractionRespond(i.Interaction, &interaction)
 }
 
-func ShowUser(s *discordgo.Session, i *discordgo.InteractionCreate, username string) discordgo.InteractionResponse {
-	user, error := db.GetUserByUsername(username)
+func (c *commands) ShowUser(s *discordgo.Session, i *discordgo.InteractionCreate, username string) discordgo.InteractionResponse {
+	user, error := c.DB.GetUserByUsername(username)
 	if error != nil {
 		fmt.Printf("show user error: %s", error)
 		return discordgo.InteractionResponse{

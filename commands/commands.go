@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kata-kas/filmreel/letterboxd"
+	"github.com/kata-kas/filmreel/store"
 )
 
 var commandStructure = []*discordgo.ApplicationCommand{
@@ -54,30 +56,40 @@ var commandStructure = []*discordgo.ApplicationCommand{
 	},
 }
 
-var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	"basic-command": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Hey there! Congratulations, you just executed our first slash command",
-			},
-		})
-	},
-	"ping": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "pong",
-			},
-		})
-	},
-	"add-user": AddUserCommand,
-	"top":      TopCommand,
-	"movie":    MovieCommand,
-	"announce": AnnounceCommand,
+type commands struct {
+	DS *discordgo.Session
+	DB *store.Store
+	LB *letterboxd.LB
 }
 
-func guildMemberUpdate(s *discordgo.Session, m *discordgo.GuildMemberUpdate) {
+func NewCommands(ds *discordgo.Session, db *store.Store, lb *letterboxd.LB) *commands {
+	return &commands{ds, db, lb}
+}
+
+func (c *commands) RegisterCommands() {
+	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"ping":     c.PingCommand,
+		"add-user": c.AddUserCommand,
+		"top":      c.TopCommand,
+		"movie":    c.MovieCommand,
+		"announce": c.AnnounceCommand,
+	}
+
+	c.DS.AddHandler(c.guildMemberUpdate)
+	c.DS.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
+		}
+	})
+	for _, v := range commandStructure {
+		_, err := c.DS.ApplicationCommandCreate(c.DS.State.User.ID, "", v)
+		if err != nil {
+			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+		}
+	}
+}
+
+func (c *commands) guildMemberUpdate(s *discordgo.Session, m *discordgo.GuildMemberUpdate) {
 	roleName := "-18"
 	fmt.Printf("member %s joined\n", m.User.Username)
 	roles, err := s.GuildRoles(m.GuildID)
@@ -110,21 +122,6 @@ func guildMemberUpdate(s *discordgo.Session, m *discordgo.GuildMemberUpdate) {
 				log.Printf("kicked user %s with role %s", m.User.Username, roleName)
 			}
 			return
-		}
-	}
-}
-
-func RegisterCommands(bot *discordgo.Session) {
-	bot.AddHandler(guildMemberUpdate)
-	bot.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
-		}
-	})
-	for _, v := range commandStructure {
-		_, err := bot.ApplicationCommandCreate(bot.State.User.ID, "", v)
-		if err != nil {
-			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
 		}
 	}
 }

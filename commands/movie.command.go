@@ -5,11 +5,10 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/filmreel/db"
 	"github.com/kata-kas/filmreel/letterboxd"
 )
 
-func MovieCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (c *commands) MovieCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
 	for _, opt := range options {
@@ -18,7 +17,7 @@ func MovieCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	movieTitle := optionMap["movie-title"].StringValue()
 
-	movie, err := db.SearchMovie(movieTitle)
+	movie, err := c.DB.SearchMovie(movieTitle)
 	if err != nil {
 		fmt.Println(err)
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

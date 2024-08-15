@@ -5,11 +5,10 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/filmreel/db"
 )
 
-func TopCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	users, err := db.GetTopByTotalMovies()
+func (c *commands) TopCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	users, err := c.DB.GetTopByTotalMovies()
 	if err != nil {
 		fmt.Printf("error on TopCommand: %v\n", err)
 	}

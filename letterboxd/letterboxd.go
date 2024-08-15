@@ -1,51 +1,30 @@
 package letterboxd
 
 import (
-	"context"
-	"crypto/md5"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/stealth"
 	"github.com/gocolly/colly"
-	"github.com/kata-kas/filmreel/db"
+	"github.com/kata-kas/filmreel/store"
 )
 
-type lb struct {
-	B *rod.Browser
+type LB struct {
+	B  *rod.Browser
+	DB *store.Store
 }
 
-func NewLB() *lb {
-	path, noPathErr := launcher.LookPath()
-	if noPathErr != false {
-		log.Println("Error looking for browser path")
-	}
-
-	debugUrl := launcher.New().
-		Bin(path).
-		Devtools(false).
-		Headless(true).
-		NoSandbox(true).
-		MustLaunch()
-
-	browser := rod.New().ControlURL(debugUrl).Timeout(time.Hour).MustConnect().Context(context.Background())
-	browser.SlowMotion(time.Second * 1)
-	defer browser.MustClose()
-	fmt.Printf("js: %x\n\n", md5.Sum([]byte(stealth.JS)))
-
-	return &lb{browser}
+func NewLB(browser *rod.Browser, db *store.Store) *LB {
+	return &LB{browser, db}
 }
 
-func (lb *lb) ScrapeUser(username string) (User, error) {
+func (lb *LB) ScrapeUser(username string) (User, error) {
 	result := User{
 		LbUsername: username,
 	}
@@ -81,7 +60,7 @@ func (lb *lb) ScrapeUser(username string) (User, error) {
 	return result, resultError
 }
 
-func (lb *lb) ScrapeMovie(movieURL string) (*db.Movie, error) {
+func (lb *LB) ScrapeMovie(movieURL string) (*store.Movie, error) {
 	page := stealth.MustPage(lb.B)
 	page.MustNavigate(movieURL)
 	page.MustWaitLoad()
@@ -111,7 +90,7 @@ func (lb *lb) ScrapeMovie(movieURL string) (*db.Movie, error) {
 	imdbID := strings.TrimSpace(strings.TrimPrefix(strings.TrimSuffix(imdbLink, "/maindetails"), "http://www.imdb.com/title/tt"))
 	tmdbLinkElem := page.MustElementX("//a[contains(@href, 'themoviedb.org/movie/')]/@href")
 	tmdbLink := tmdbLinkElem.MustText()
-	tmdbID := extractTmdbID(tmdbLink)
+	tmdbID := lb.extractTmdbID(tmdbLink)
 	tmdbIDInt, err := strconv.Atoi(strings.TrimSpace(tmdbID))
 	if err != nil {
 		fmt.Printf("error converting tmdbid to int: %v", err.Error())
@@ -126,7 +105,7 @@ func (lb *lb) ScrapeMovie(movieURL string) (*db.Movie, error) {
 	releaseDateText := releaseDate.MustText()
 	runtimeElem := page.MustElementX("//p[@class='text-link text-footer']/text()[1]")
 	runtimeText := strings.TrimSpace(runtimeElem.MustText())
-	runtimeMinutes, err := extractRuntimeMinutes(runtimeText)
+	runtimeMinutes, err := lb.extractRuntimeMinutes(runtimeText)
 	if err != nil {
 		fmt.Println("Error extracting runtime:", err)
 		return nil, err
@@ -163,7 +142,7 @@ func (lb *lb) ScrapeMovie(movieURL string) (*db.Movie, error) {
 		fmt.Printf("error parsing popularity: %v", err.Error())
 	}
 
-	movie := &db.Movie{}
+	movie := &store.Movie{}
 	movie.Genres = fmt.Sprintf(`["%s"]`, strings.Join(genres, `","`))
 	movie.ImageURL = *imageURL
 	movie.IMDbID = imdbID
@@ -186,7 +165,7 @@ func (lb *lb) ScrapeMovie(movieURL string) (*db.Movie, error) {
 	return movie, nil
 }
 
-func extractRuntimeMinutes(runtimeText string) (int, error) {
+func (lb *LB) extractRuntimeMinutes(runtimeText string) (int, error) {
 	// Regex to find the numeric part of the runtime
 	re := regexp.MustCompile(`(\d+)\s*mins?`)
 	matches := re.FindStringSubmatch(runtimeText)
@@ -202,11 +181,20 @@ func extractRuntimeMinutes(runtimeText string) (int, error) {
 }
 
 // extractTmdbID extracts the TMDb ID from the TMDb link
-func extractTmdbID(tmdbLink string) string {
+func (lb *LB) extractTmdbID(tmdbLink string) string {
 	// Split the TMDb link by '/' and extract the ID
 	parts := strings.Split(tmdbLink, "/")
 	if len(parts) > 0 {
 		return parts[len(parts)-2] // The ID is the second-to-last part
 	}
 	return ""
+}
+
+func (lb *LB) LetterboxdUserToDBUser(src User) *store.User {
+	return &store.User{
+		LbUsername:  src.LbUsername,
+		Name:        src.Name,
+		TotalMovies: int(src.TotalMovies),
+		ImageUrl:    src.ImageUrl,
+	}
 }

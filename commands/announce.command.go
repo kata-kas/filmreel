@@ -7,12 +7,11 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/filmreel/db"
 	"github.com/kata-kas/filmreel/letterboxd"
 	"gorm.io/gorm"
 )
 
-func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (c *commands) AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
 	for _, opt := range options {
@@ -21,28 +20,27 @@ func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	movieLink := optionMap["letterboxd-link"].StringValue()
 
-	interactionResponseData := announceLb(movieLink)
+	interactionResponseData := c.announceLb(movieLink)
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &interactionResponseData,
 	})
 }
 
-func announceLb(movieLink string) discordgo.InteractionResponseData {
+func (c *commands) announceLb(movieLink string) discordgo.InteractionResponseData {
 	parsedURL, err := url.Parse(movieLink)
 	if err != nil {
 		return discordgo.InteractionResponseData{Content: err.Error()}
 	}
 	movieId := path.Base(parsedURL.Path)
 
-	movie, err := db.SearchMovieByMovieId(movieId)
+	movie, err := c.DB.SearchMovieByMovieId(movieId)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		fmt.Println(err)
 		return discordgo.InteractionResponseData{Content: fmt.Sprintf("no movie found for movie id: %s", movieId)}
 	}
 	if err == gorm.ErrRecordNotFound {
-		letterboxd := letterboxd.NewLB()
-		movie, err = letterboxd.ScrapeMovie(movieLink)
+		movie, err = c.LB.ScrapeMovie(movieLink)
 		if err != nil {
 			fmt.Printf("err: %v", err.Error())
 			return discordgo.InteractionResponseData{Content: fmt.Sprintf("no movie found for movie id: %s", movieId)}
