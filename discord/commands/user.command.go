@@ -39,7 +39,8 @@ func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	user, error := letterboxd.ScrapeUser(username)
+	lb := letterboxd.NewLB()
+	user, error := lb.ScrapeUser(username)
 
 	if error != nil {
 		fmt.Printf("scraping user error: %s", error)
@@ -51,7 +52,7 @@ func AddUserCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	dbUser := db.LetterboxdUserToDBUser(user)
+	dbUser := letterboxd.LetterboxdUserToDBUser(user)
 	addUserErr := db.AddUser(&dbUser)
 	if addUserErr != nil {
 		fmt.Println(err)

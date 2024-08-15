@@ -5,17 +5,25 @@ import (
 	"log"
 	"os"
 
-	libsql "github.com/renxzen/gorm-libsql"
-	_ "github.com/tursodatabase/libsql-client-go/libsql"
+	"github.com/kata-kas/filmreel/utils"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
+var (
+	db                *gorm.DB
+	POSTGRES_HOST     = utils.EnvString("POSTGRES_HOST", "")
+	POSTGRES_USER     = utils.EnvString("POSTGRES_USER", "")
+	POSTGRES_PASSWORD = utils.EnvString("POSTGRES_PASSWORD", "")
+	POSTGRES_PORT     = utils.EnvString("POSTGRES_PORT", "")
+	POSTGRES_DB       = utils.EnvString("POSTGRES_DB", "")
+)
 
 func InitializeDatabase() error {
-	database, err := gorm.Open(libsql.Open(os.Getenv("DB_URL")), &gorm.Config{})
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_PORT)
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to open db %s: %s", os.Getenv("DB_URL"), err)
+		fmt.Fprintf(os.Stderr, "failed to open db %s: %s", POSTGRES_DB, err)
 		log.Fatal(err)
 		return err
 	}

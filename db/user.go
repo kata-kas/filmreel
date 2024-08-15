@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/kata-kas/filmreel/letterboxd"
 	"gorm.io/gorm"
 )
 
@@ -11,15 +10,6 @@ type User struct {
 	Name        string
 	TotalMovies int
 	ImageUrl    string
-}
-
-func LetterboxdUserToDBUser(src letterboxd.User) User {
-	return User{
-		LbUsername:  src.LbUsername,
-		Name:        src.Name,
-		TotalMovies: int(src.TotalMovies),
-		ImageUrl:    src.ImageUrl,
-	}
 }
 
 func GetUserByUsername(username string) (*User, error) {

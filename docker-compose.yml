@@ -1,0 +1,49 @@
+services:
+  filmreel:
+    container_name: filmreel
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file: .env
+    depends_on:
+      - filmreel_cache
+      - filmreel_db
+    environment:
+      DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@filmreel_db:5432/${POSTGRES_DB} 
+    ports:
+      - "8080:8080"
+
+  # Redis cache service
+  filmreel_cache:
+    image: redis:6.2-alpine
+    container_name: filmreel_cache
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD} --port 6380
+    ports:
+      - "6380:6380"
+    volumes:
+      - filmreel_cache:/data
+
+  # PostgreSQL service
+  filmreel_db:
+    image: postgres:16
+    container_name: filmreel_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - filmreel_db_data:/var/lib/postgresql/data
+
+networks:
+  default:
+    external: true
+    name: shared_network
+
+volumes:
+  filmreel_cache:
+  filmreel_db_data:

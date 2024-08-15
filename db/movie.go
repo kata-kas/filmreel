@@ -59,9 +59,6 @@ func SearchMovie(title string) (*Movie, error) {
 func SearchMovieByMovieId(movieId string) (*Movie, error) {
 	var movie Movie
 	if err := db.Where("movie_id = ?", movieId).First(&movie).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("No movie found for movie id: %s", movieId)
-		}
 		return nil, err
 	}
 	return &movie, nil

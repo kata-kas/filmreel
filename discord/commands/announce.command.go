@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/kata-kas/filmreel/db"
 	"github.com/kata-kas/filmreel/letterboxd"
+	"gorm.io/gorm"
 )
 
 func AnnounceCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -35,9 +36,17 @@ func announceLb(movieLink string) discordgo.InteractionResponseData {
 	movieId := path.Base(parsedURL.Path)
 
 	movie, err := db.SearchMovieByMovieId(movieId)
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		fmt.Println(err)
-		return discordgo.InteractionResponseData{Content: err.Error()}
+		return discordgo.InteractionResponseData{Content: fmt.Sprintf("no movie found for movie id: %s", movieId)}
+	}
+	if err == gorm.ErrRecordNotFound {
+		letterboxd := letterboxd.NewLB()
+		movie, err = letterboxd.ScrapeMovie(movieLink)
+		if err != nil {
+			fmt.Printf("err: %v", err.Error())
+			return discordgo.InteractionResponseData{Content: fmt.Sprintf("no movie found for movie id: %s", movieId)}
+		}
 	}
 
 	genreSlice := strings.Split(movie.Genres, ";")
