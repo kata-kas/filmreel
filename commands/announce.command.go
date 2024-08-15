@@ -1,13 +1,14 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kata-kas/filmreel/letterboxd"
+	"github.com/kata-kas/filmreel/store"
 	"gorm.io/gorm"
 )
 
@@ -20,34 +21,63 @@ func (c *commands) AnnounceCommand(s *discordgo.Session, i *discordgo.Interactio
 
 	movieLink := optionMap["letterboxd-link"].StringValue()
 
-	interactionResponseData := c.announceLb(movieLink)
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &interactionResponseData,
-	})
+	// Acknowledge the interaction with a defer response
+	if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	}); err != nil {
+		fmt.Println("error responding to interaction:", err)
+		return
+	}
+
+	// Perform the time-consuming task
+	embeds, genreRoles, genreRolesIds, err := c.announceLb(movieLink)
+	if err != nil {
+		// Handle the error appropriately, e.g., log it and respond with an error message
+		fmt.Println("error processing announcement:", err)
+		// Optionally send an error message to the user if necessary
+		errMsg := "There was an error processing your request."
+		if _, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: &errMsg,
+		}); err != nil {
+			fmt.Println("error editing response:", err)
+		}
+		return
+	}
+
+	// Follow up with the result after processing
+	if _, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds:          embeds,
+		Content:         &genreRoles,
+		AllowedMentions: &discordgo.MessageAllowedMentions{Roles: genreRolesIds},
+	}); err != nil {
+		fmt.Println("error editing response:", err)
+	}
 }
 
-func (c *commands) announceLb(movieLink string) discordgo.InteractionResponseData {
+func (c *commands) announceLb(movieLink string) (*[]*discordgo.MessageEmbed, string, []string, error) {
 	parsedURL, err := url.Parse(movieLink)
 	if err != nil {
-		return discordgo.InteractionResponseData{Content: err.Error()}
+		return nil, "", nil, err
 	}
 	movieId := path.Base(parsedURL.Path)
 
 	movie, err := c.DB.SearchMovieByMovieId(movieId)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		fmt.Println(err)
-		return discordgo.InteractionResponseData{Content: fmt.Sprintf("no movie found for movie id: %s", movieId)}
+		return nil, "", nil, err
 	}
 	if err == gorm.ErrRecordNotFound {
 		movie, err = c.LB.ScrapeMovie(movieLink)
 		if err != nil {
 			fmt.Printf("err: %v", err.Error())
-			return discordgo.InteractionResponseData{Content: fmt.Sprintf("no movie found for movie id: %s", movieId)}
+			return nil, "", nil, err
 		}
+		c.DB.InsertMovies([]store.Movie{*movie})
+		fmt.Printf("movie is: %v", &movie)
 	}
 
-	genreSlice := strings.Split(movie.Genres, ";")
+	genreSlice := strings.Split(movie.Genres, ",")
+	fmt.Printf("genre slice: %v", genreSlice)
 	genreRoles := make([]string, 0)
 	genreRolesIds := make([]string, 0)
 
@@ -77,31 +107,32 @@ func (c *commands) announceLb(movieLink string) discordgo.InteractionResponseDat
 		},
 	}
 	image := &discordgo.MessageEmbedThumbnail{
-		URL: letterboxd.LB_IMG_URL + movie.ImageURL + ".jpg",
+		URL: movie.ImageURL,
 	}
+
+	movieJSON, err := json.Marshal(movie)
+	if err != nil {
+		fmt.Printf("Error encoding movie to JSON: %s\n", err)
+		return nil, "", nil, nil
+	}
+	fmt.Printf("Encoded JSON: %s\n", string(movieJSON))
+
 	embed := discordgo.MessageEmbed{
 		Thumbnail:   image,
 		Title:       fmt.Sprintf("** Streaming %s (%d) now **\n", movie.MovieTitle, movie.YearReleased),
-		Description: fmt.Sprintf("> %s", movie.Overview),
+		Description: fmt.Sprintf("> %s", string(movie.Overview)),
 		Color:       0xFFD700,
 		Fields:      fields,
 		URL:         movieLink,
 	}
 
 	embeds := []*discordgo.MessageEmbed{&embed}
-	return discordgo.InteractionResponseData{
-		Embeds:  embeds,
-		Content: fmt.Sprintf("%s\n", strings.Join(genreRoles, "")),
-		AllowedMentions: &discordgo.MessageAllowedMentions{
-			Roles: genreRolesIds,
-		},
-	}
+	return &embeds, fmt.Sprintf("%s\n", strings.Join(genreRoles, "")), genreRolesIds, nil
 }
 
 func convertVoteAverageToMoons(voteAverage float64) string {
 	result := ""
 	moonCount := 0
-	voteAverage /= 2
 	moons := map[string]string{"full": " 🌕 ", "half": " 🌗 ", "empty": " 🌑 "}
 
 	for i := 0; i < 5; i++ {

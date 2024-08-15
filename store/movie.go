@@ -9,6 +9,7 @@ import (
 type Movie struct {
 	Genres              string  `json:"genres"`
 	ImageURL            string  `json:"image_url"`
+	CoverImageURL       string  `json:"cover_image_url"`
 	IMDbID              string  `json:"imdb_id"`
 	IMDbLink            string  `json:"imdb_link"`
 	MovieID             string  `json:"movie_id"`

@@ -35,7 +35,7 @@ func main() {
 		NoSandbox(true).
 		MustLaunch()
 
-	browser := rod.New().ControlURL(debugUrl).Timeout(time.Hour).MustConnect().Context(context.Background())
+	browser := rod.New().ControlURL(debugUrl).Trace(true).Timeout(time.Hour).MustConnect().Context(context.Background())
 	browser.SlowMotion(time.Second * 1)
 	defer browser.MustClose()
 	fmt.Printf("js: %x\n\n", md5.Sum([]byte(stealth.JS)))
