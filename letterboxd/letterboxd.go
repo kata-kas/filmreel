@@ -154,7 +154,7 @@ func (lb *LB) ScrapeMovie(movieURL string) (*store.Movie, error) {
 	}
 
 	movie := &store.Movie{
-		Genres:              strings.Join(genres, `","`),
+		Genres:              strings.Join(genres, `,`),
 		ImageURL:            *imageURL,
 		CoverImageURL:       coverImgURL,
 		IMDbID:              imdbID,
@@ -167,7 +167,7 @@ func (lb *LB) ScrapeMovie(movieURL string) (*store.Movie, error) {
 		ProductionCountries: countriesDetailsText,
 		ReleaseDate:         releaseDateText,
 		Runtime:             runtimeMinutes,
-		SpokenLanguages:     strings.Join(languages, `","`),
+		SpokenLanguages:     strings.Join(languages, `,`),
 		TmdbID:              tmdbIDInt,
 		TmdbLink:            tmdbLink,
 		VoteAverage:         voteAverage,
