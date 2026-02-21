@@ -1,0 +1,69 @@
+{
+	"name": "filmreel",
+	"version": "1.0.0",
+	"description": "FilmReel - A Discord bot for Letterboxd film tracking and leaderboards",
+	"type": "module",
+	"main": "dist/bot/index.js",
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/bot/index.js",
+		"start:worker": "node dist/worker/index.js",
+		"start:scheduler": "node dist/scheduler/index.js",
+		"dev": "tsx src/bot/index.ts",
+		"dev:worker": "tsx src/worker/index.ts",
+		"dev:scheduler": "tsx src/scheduler/index.ts",
+		"db:generate": "prisma generate",
+		"db:migrate": "prisma migrate dev",
+		"db:deploy": "prisma migrate deploy",
+		"db:studio": "prisma studio",
+		"commands:register": "tsx scripts/registerCommands.ts",
+		"test": "vitest",
+		"test:scraper": "vitest src/scraper/letterboxd.test.ts --run",
+		"test:scraper:live": "LIVE_SCRAPER_TESTS=1 vitest src/scraper/letterboxd.integration.test.ts --run",
+		"test:ui": "vitest --ui",
+		"lint": "pnpm exec biome check --write"
+	},
+	"keywords": [
+		"discord",
+		"bot",
+		"letterboxd",
+		"film",
+		"movies",
+		"leaderboard"
+	],
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"@bull-board/api": "^6.19.0",
+		"@bull-board/express": "^6.19.0",
+		"@prisma/adapter-pg": "^7.4.1",
+		"@prisma/client": "^7.4.1",
+		"axios": "^1.7.9",
+		"bullmq": "^5.40.2",
+		"cheerio": "^1.0.0",
+		"discord.js": "^14.18.0",
+		"dotenv": "^16.4.7",
+		"express": "^5.2.1",
+		"ioredis": "^5.9.2",
+		"node-cron": "^3.0.3",
+		"pino": "^10.3.1",
+		"playwright": "^1.58.2",
+		"playwright-extra": "^4.3.6",
+		"prisma": "^7.4.1",
+		"puppeteer-extra-plugin-stealth": "^2.11.2",
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.4",
+		"@types/express": "^5.0.6",
+		"@types/node": "^22.13.4",
+		"@types/node-cron": "^3.0.11",
+		"@vitest/ui": "^3.0.6",
+		"tsx": "^4.19.3",
+		"typescript": "^5.7.3",
+		"vitest": "^3.0.6"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
+}

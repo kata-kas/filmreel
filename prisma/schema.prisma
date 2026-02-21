@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  discordId          String
+  guildId            String
+  letterboxdUsername String
+  nickname           String?
+  lastFmUsername     String?
+  aniListUsername    String?
+  lastScraped        DateTime?
+  createdAt          DateTime   @default(now())
+  deletedAt          DateTime?
+
+  ratings            Rating[]
+  favorites          UserFavorite[]
+  xpEvents           XpEvent[]
+
+  @@id([discordId, guildId])
+}
+
+model Film {
+  letterboxdSlug     String    @id
+  title              String
+  year               Int?
+  director           String[]
+  country            String[]
+  runtime            Int?
+  genres             String[]
+  posterPath         String?
+  letterboxdRating   Float?
+  letterboxdVotes    Int?
+  createdAt          DateTime  @default(now())
+
+  providers          FilmProvider[]
+  ratings            Rating[]
+  listFilms          ListFilm[]
+}
+
+model FilmProvider {
+  id                 Int       @id @default(autoincrement())
+  letterboxdSlug     String
+  provider           String    // 'tmdb' | 'letterboxd'
+  providerId         String?
+  resolvedAt         DateTime?
+  failed             Boolean   @default(false)
+  failedAt           DateTime?
+  retryCount         Int       @default(0)
+
+  film               Film      @relation(fields: [letterboxdSlug], references: [letterboxdSlug], onDelete: Cascade)
+
+  @@unique([letterboxdSlug, provider])
+}
+
+model Rating {
+  discordId          String
+  guildId            String
+  letterboxdSlug     String
+  rating             Decimal?  @db.Decimal(3, 1)
+  watched            Boolean   @default(true)
+  watchedDate        DateTime?
+  viewCount          Int       @default(1)
+  updatedAt          DateTime  @updatedAt
+
+  user               User      @relation(fields: [discordId, guildId], references: [discordId, guildId])
+  film               Film      @relation(fields: [letterboxdSlug], references: [letterboxdSlug])
+
+  @@id([discordId, guildId, letterboxdSlug])
+  @@index([letterboxdSlug])
+  @@index([discordId, guildId])
+  @@index([guildId, watchedDate])
+}
+
+model GuildList {
+  id                 Int       @id @default(autoincrement())
+  guildId            String
+  letterboxdUrl      String
+  listName           String
+  createdBy          String
+  lastSynced         DateTime?
+  deadline           DateTime?
+  deadlineLabel      String?
+
+  listFilms          ListFilm[]
+  seasons            Season[]
+}
+
+model ListFilm {
+  listId             Int
+  letterboxdSlug     String
+  position           Int
+
+  list               GuildList @relation(fields: [listId], references: [id])
+  film               Film      @relation(fields: [letterboxdSlug], references: [letterboxdSlug])
+
+  @@id([listId, letterboxdSlug])
+}
+
+model UserFavorite {
+  id                 Int       @id @default(autoincrement())
+  discordId          String
+  guildId            String
+  lookupType         String
+  tmdbId             Int?
+  isoCode            String?
+  canonicalName      String
+
+  user               User      @relation(fields: [discordId, guildId], references: [discordId, guildId])
+
+  @@unique([discordId, guildId, lookupType, tmdbId, isoCode])
+}
+
+model XpEvent {
+  id                 Int       @id @default(autoincrement())
+  discordId          String
+  guildId            String
+  eventType          String
+  idempotencyKey     String
+  xpAwarded          Int
+  createdAt          DateTime  @default(now())
+
+  user               User      @relation(fields: [discordId, guildId], references: [discordId, guildId])
+
+  @@unique([discordId, guildId, eventType, idempotencyKey])
+}
+
+model LevelThreshold {
+  guildId            String
+  level              Int
+  xpRequired         Int
+  roleId             String?
+
+  @@id([guildId, level])
+}
+
+model Season {
+  id                 Int       @id @default(autoincrement())
+  guildId            String
+  name               String
+  listId             Int
+  startDate          DateTime
+  endDate            DateTime
+
+  list               GuildList @relation(fields: [listId], references: [id])
+}
+
+model GuildXpConfig {
+  guildId            String
+  eventType          String
+  xpAmount           Int
+
+  @@id([guildId, eventType])
+}
